@@ -227,11 +227,10 @@ function getAvgDaysPerUnit(p) {
 // Şu anki alımla kalan gün tahmini
 function getDaysLeft(p) {
   if (!p.lastBought) return null;
-  const lastQty = p.lastQty > 0 ? p.lastQty : 1;
   const rate = getAvgDaysPerUnit(p);
-  const avg = rate !== null
-    ? Math.round(rate * lastQty)
-    : (p.estDays || 30);
+  if (rate === null) return null; // henüz yeterli veri yok
+  const lastQty = p.lastQty > 0 ? p.lastQty : 1;
+  const avg = Math.round(rate * lastQty);
   const elapsed = daysBetween(p.lastBought, today());
   return avg - elapsed;
 }
@@ -240,12 +239,10 @@ function getDaysLeft(p) {
 function avgLabel(p) {
   const rate = getAvgDaysPerUnit(p);
   const n = p.history ? Object.keys(p.history).length : 0;
-  const conf = n === 0 ? 'başlangıç tahmini' : n === 1 ? '1 ölçüm' : `${n} ölçüm`;
-  if (rate !== null && p.unit) {
-    return `ort. ${Math.round(rate)} gün/${p.unit} · ${conf}`;
-  }
-  const avg = rate !== null ? Math.round(rate) : (p.estDays || 30);
-  return `ort. ${avg} gün · ${conf}`;
+  if (rate === null) return 'henüz veri yok';
+  const conf = n === 1 ? '1 ölçüm' : `${n} ölçüm`;
+  if (p.unit) return `ort. ${Math.round(rate)} gün/${p.unit} · ${conf}`;
+  return `ort. ${Math.round(rate)} gün · ${conf}`;
 }
 
 function getStatus(dl) {
@@ -380,17 +377,10 @@ function openAdd() {
         </select>
       </div>
     </div>
-    <div class="form-row">
-      <div class="form-group">
-        <label>Tahmini ömür (gün)</label>
-        <input id="f-est" type="number" min="1" value="30" />
-        <div class="unit-hint" id="f-est-hint">1 birim için başlangıç tahmini</div>
-      </div>
-      <div class="form-group" id="f-qty-group" style="display:none">
-        <label>Alım miktarı</label>
-        <input id="f-qty" type="number" min="0.1" step="0.1" value="1" />
-        <div class="unit-hint" id="f-qty-hint"></div>
-      </div>
+    <div class="form-group" id="f-qty-group" style="display:none">
+      <label>Alım miktarı</label>
+      <input id="f-qty" type="number" min="0.1" step="0.1" value="1" />
+      <div class="unit-hint" id="f-qty-hint"></div>
     </div>
     <div class="form-group">
       <label>Mevcut durum</label>
@@ -419,15 +409,12 @@ function openAdd() {
   document.getElementById('f-unit').addEventListener('change', function() {
     const u = this.value;
     const qg = document.getElementById('f-qty-group');
-    const hint = document.getElementById('f-est-hint');
     const qhint = document.getElementById('f-qty-hint');
     if (u) {
       qg.style.display = '';
-      hint.textContent = `1 ${u} için başlangıç tahmini`;
       qhint.textContent = u;
     } else {
       qg.style.display = 'none';
-      hint.textContent = '1 birim için başlangıç tahmini';
     }
   });
 }
@@ -466,7 +453,6 @@ function addProduct() {
       category: document.getElementById('f-cat').value,
       unit: unit || null,
       lastQty: lastQty || null,
-      estDays: parseInt(document.getElementById('f-est').value) || 30,
       lastBought: lastBought || null,
       history: {}
     };
@@ -487,7 +473,7 @@ function openDetail(id) {
   const icon = CATS[p.category] || '📦';
   const rate = getAvgDaysPerUnit(p);
   const lastQty = p.lastQty > 0 ? p.lastQty : 1;
-  const totalAvg = rate !== null ? Math.round(rate * lastQty) : (p.estDays || 30);
+  const totalAvg = rate !== null ? Math.round(rate * lastQty) : null;
 
   let estimatedEnd = '—';
   if (p.lastBought && dl !== null) {
@@ -531,7 +517,7 @@ function openDetail(id) {
       <div class="info-row"><span class="lbl">Son alım</span><span class="val">${formatDate(p.lastBought)}${p.unit && p.lastQty ? ' · ' + p.lastQty + ' ' + p.unit : ''}</span></div>
       <div class="info-row"><span class="lbl">Tahmini bitiş</span><span class="val">${estimatedEnd}</span></div>
       <div class="info-row"><span class="lbl">${rate !== null && p.unit ? 'Ort. tüketim hızı' : 'Ortalama ömür'}</span>
-        <span class="val">${rate !== null && p.unit ? Math.round(rate) + ' gün/' + p.unit : totalAvg + ' gün'} (${avgLabel(p).split('·')[1]?.trim() || 'tahmini'})</span></div>
+        <span class="val">${rate !== null ? (p.unit ? Math.round(rate) + ' gün/' + p.unit : totalAvg + ' gün') : '—'} ${rate !== null ? '(' + (avgLabel(p).split('·')[1]?.trim() || '') + ')' : '(henüz veri yok)'}</span></div>
       <div class="info-row"><span class="lbl">Kalan</span>
         <span class="val" style="color:${dl===null?'#888':dl<=0?'#A32D2D':dl<=7?'#854F0B':'#3B6D11'}">${dl===null?'—':dl<=0?'Tükenmiş!':dl+' gün'}</span></div>
     </div>
@@ -613,15 +599,9 @@ function openEdit(id) {
         </select>
       </div>
     </div>
-    <div class="form-row">
-      <div class="form-group">
-        <label>Başlangıç tahmini (gün)</label>
-        <input id="e-est" type="number" min="1" value="${p.estDays || 30}" />
-      </div>
-      <div class="form-group">
-        <label>Son alım tarihi</label>
-        <input id="e-bought" type="date" value="${p.lastBought||''}" />
-      </div>
+    <div class="form-group">
+      <label>Son alım tarihi</label>
+      <input id="e-bought" type="date" value="${p.lastBought||''}" />
     </div>
     <div class="modal-actions">
       <button class="btn" onclick="openDetail('${p.id}')">Geri</button>
@@ -636,7 +616,6 @@ function saveEdit(id) {
     [`products/${id}/name`]: name,
     [`products/${id}/category`]: document.getElementById('e-cat').value,
     [`products/${id}/unit`]: document.getElementById('e-unit').value || null,
-    [`products/${id}/estDays`]: parseInt(document.getElementById('e-est').value) || 30,
     [`products/${id}/lastBought`]: document.getElementById('e-bought').value || null
   };
   setSyncStatus('loading', 'Kaydediliyor...');
