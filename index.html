@@ -191,7 +191,7 @@ const CATS = {
 
 // ── Birimler ──────────────────────────────────────────────────
 // birim yoksa (eski ürünler) null kabul edilir → eski davranış korunur
-const UNITS = ['adet', 'rulo', 'kg', 'g', 'L', 'mL', 'paket', 'kutu', 'şişe', 'demet'];
+const UNITS = ['adet', 'kg', 'L'];
 
 // ── Yardımcılar ───────────────────────────────────────────────
 function today() { return new Date().toISOString().split('T')[0]; }
@@ -387,7 +387,7 @@ function openAdd() {
         <div class="unit-hint" id="f-est-hint">1 birim için başlangıç tahmini</div>
       </div>
       <div class="form-group" id="f-qty-group" style="display:none">
-        <label>İlk alım miktarı</label>
+        <label>Alım miktarı</label>
         <input id="f-qty" type="number" min="0.1" step="0.1" value="1" />
         <div class="unit-hint" id="f-qty-hint"></div>
       </div>
@@ -441,26 +441,41 @@ function toggleBoughtField() {
   document.getElementById('lbl-need').style.color = val === 'need' ? '#A32D2D' : '';
 }
 
+function parseQty(val) {
+  // Hem nokta hem virgülü ondalık ayraç olarak kabul et
+  if (!val) return null;
+  return parseFloat(String(val).replace(',', '.')) || null;
+}
+
 function addProduct() {
   const name = document.getElementById('f-name').value.trim();
   if (!name) { alert('Lütfen ürün adı girin.'); return; }
-  const statusVal = (document.querySelector('input[name="f-status"]:checked') || {}).value || 'have';
-  const boughtEl = document.getElementById('f-bought');
-  const lastBought = statusVal === 'have' ? (boughtEl ? boughtEl.value || today() : today()) : null;
-  const unit = document.getElementById('f-unit').value || null;
-  const qtyEl = document.getElementById('f-qty');
-  const lastQty = unit && qtyEl ? (parseFloat(qtyEl.value) || 1) : null;
-  const id = uid();
-  const p = {
-    id, name,
-    category: document.getElementById('f-cat').value,
-    unit: unit || null,
-    lastQty: lastQty || null,
-    estDays: parseInt(document.getElementById('f-est').value) || 30,
-    lastBought: lastBought || null,
-    history: {}
-  };
-  fbSet(id, p).then(() => closeModal());
+  try {
+    const statusVal = (document.querySelector('input[name="f-status"]:checked') || {}).value || 'have';
+    const boughtEl = document.getElementById('f-bought');
+    const lastBought = statusVal === 'have' ? (boughtEl ? boughtEl.value || today() : today()) : null;
+    const unitEl = document.getElementById('f-unit');
+    const unit = unitEl ? (unitEl.value || null) : null;
+    const qtyEl = document.getElementById('f-qty');
+    const lastQty = (unit && qtyEl && qtyEl.closest('[style*="display:none"]') === null)
+      ? (parseQty(qtyEl.value) || 1)
+      : null;
+    const id = uid();
+    const p = {
+      id, name,
+      category: document.getElementById('f-cat').value,
+      unit: unit || null,
+      lastQty: lastQty || null,
+      estDays: parseInt(document.getElementById('f-est').value) || 30,
+      lastBought: lastBought || null,
+      history: {}
+    };
+    fbSet(id, p)
+      .then(() => closeModal())
+      .catch(err => { alert('Kaydetme hatası: ' + err.message); setSyncStatus('err', 'Hata'); });
+  } catch(e) {
+    alert('Beklenmeyen hata: ' + e.message);
+  }
 }
 
 // ── Ürün Detay ───────────────────────────────────────────────
@@ -562,7 +577,7 @@ function recordUsage(id) {
   if (ran_out < bought) { alert('Bitiş tarihi, alım tarihinden önce olamaz.'); return; }
 
   const qtyEl = document.getElementById('d-qty');
-  const qty = qtyEl ? (parseFloat(qtyEl.value) || 1) : null;
+  const qty = qtyEl ? (parseQty(qtyEl.value) || 1) : null;
 
   const historyKey = productsRef.child(id).child('history').push().key;
   const updates = {};
