@@ -1,0 +1,643 @@
+<!DOCTYPE html>
+<html lang="tr">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Ev Stok Takibi</title>
+<style>
+*{box-sizing:border-box;margin:0;padding:0}
+body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;background:#F7F6F2;color:#1C1C1A;min-height:100vh}
+.app{max-width:780px;margin:0 auto;padding:1.5rem 1rem}
+
+.header{display:flex;align-items:flex-start;justify-content:space-between;margin-bottom:1.5rem;gap:1rem}
+.header-text h1{font-size:20px;font-weight:600;color:#1C1C1A;letter-spacing:-0.01em}
+.header-text p{font-size:13px;color:#888780;margin-top:3px}
+.add-btn{display:flex;align-items:center;gap:6px;padding:9px 16px;border-radius:10px;border:none;background:#1C1C1A;color:#F7F6F2;font-size:13px;font-weight:500;cursor:pointer;white-space:nowrap;flex-shrink:0}
+.add-btn:hover{background:#3a3a36}
+
+.summary-bar{display:grid;grid-template-columns:repeat(3,1fr);gap:10px;margin-bottom:1.25rem}
+.scard{background:#fff;border-radius:10px;border:1px solid #E8E7E2;padding:0.9rem 1rem}
+.scard .num{font-size:24px;font-weight:600;color:#1C1C1A}
+.scard .lbl{font-size:12px;color:#888780;margin-top:2px}
+.scard.warn .num{color:#854F0B}
+.scard.danger .num{color:#A32D2D}
+
+.tabs{display:flex;gap:6px;margin-bottom:1rem;flex-wrap:wrap}
+.tab{padding:6px 14px;border-radius:20px;font-size:13px;cursor:pointer;border:1px solid #D3D1C7;background:#fff;color:#5F5E5A}
+.tab.active{background:#1C1C1A;color:#F7F6F2;border-color:transparent}
+
+.grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(155px,1fr));gap:10px;margin-bottom:2rem}
+.card{background:#fff;border:1px solid #E8E7E2;border-radius:14px;padding:1rem;cursor:pointer;transition:border-color 0.15s,transform 0.1s}
+.card:hover{border-color:#B4B2A9;transform:translateY(-1px)}
+.card-emoji{font-size:22px;margin-bottom:8px}
+.card-name{font-size:14px;font-weight:600;color:#1C1C1A;margin-bottom:2px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.card-cat{font-size:11px;color:#888780;margin-bottom:10px}
+
+.ring-wrap{display:flex;align-items:center;gap:10px;margin-bottom:6px}
+.ring-info{flex:1;min-width:0}
+.days-left{font-size:20px;font-weight:600;color:#1C1C1A;line-height:1.1}
+.days-label{font-size:11px;color:#888780}
+.avg-line{font-size:11px;color:#B4B2A9;margin-top:4px}
+
+.badge{display:inline-block;font-size:10px;font-weight:600;padding:3px 8px;border-radius:20px;margin-bottom:8px;letter-spacing:0.02em}
+.badge-ok{background:#EAF3DE;color:#3B6D11}
+.badge-warn{background:#FAEEDA;color:#854F0B}
+.badge-danger{background:#FCEBEB;color:#A32D2D}
+.badge-out{background:#F1EFE8;color:#5F5E5A}
+
+.empty{grid-column:1/-1;text-align:center;padding:3rem 1rem;color:#B4B2A9;font-size:14px}
+.empty-icon{font-size:40px;margin-bottom:12px}
+
+.sync-dot{display:inline-block;width:7px;height:7px;border-radius:50%;margin-right:5px;background:#B4B2A9}
+.sync-dot.ok{background:#3B6D11}
+.sync-dot.err{background:#A32D2D}
+.sync-dot.loading{background:#854F0B;animation:pulse 1s infinite}
+@keyframes pulse{0%,100%{opacity:1}50%{opacity:0.3}}
+
+.modal-bg{position:fixed;inset:0;background:rgba(0,0,0,0.3);display:flex;align-items:center;justify-content:center;z-index:100;padding:1rem;backdrop-filter:blur(2px)}
+.modal{background:#fff;border-radius:16px;border:1px solid #E8E7E2;width:100%;max-width:420px;padding:1.5rem;max-height:90vh;overflow-y:auto}
+.modal-header{display:flex;align-items:flex-start;justify-content:space-between;margin-bottom:1.25rem}
+.modal-header h2{font-size:17px;font-weight:600;color:#1C1C1A}
+.close-btn{background:none;border:none;font-size:22px;color:#888780;cursor:pointer;line-height:1;padding:0 2px}
+.close-btn:hover{color:#1C1C1A}
+
+.form-group{margin-bottom:0.85rem}
+.form-group label{font-size:12px;font-weight:500;color:#5F5E5A;display:block;margin-bottom:5px}
+.form-group input,.form-group select{width:100%;padding:9px 12px;font-size:14px;border:1px solid #D3D1C7;border-radius:9px;background:#fff;color:#1C1C1A;outline:none}
+.form-group input:focus,.form-group select:focus{border-color:#888780}
+.form-row{display:grid;grid-template-columns:1fr 1fr;gap:10px}
+.form-row-3{display:grid;grid-template-columns:1fr 1fr 1fr;gap:10px}
+
+.modal-actions{display:flex;gap:8px;margin-top:1.25rem}
+.btn{padding:9px 18px;font-size:13px;font-weight:500;border-radius:9px;cursor:pointer;border:1px solid #D3D1C7;background:#fff;color:#5F5E5A}
+.btn:hover{background:#F7F6F2}
+.btn.primary{background:#1C1C1A;color:#fff;border-color:transparent;flex:1}
+.btn.primary:hover{background:#3a3a36}
+.btn.danger{color:#A32D2D;border-color:#F7C1C1}
+.btn.danger:hover{background:#FCEBEB}
+
+.info-box{background:#F7F6F2;border-radius:10px;padding:0.85rem 1rem;margin-bottom:1.1rem;font-size:13px}
+.info-row{display:flex;justify-content:space-between;align-items:center;padding:4px 0}
+.info-row:not(:last-child){border-bottom:1px solid #E8E7E2}
+.info-row .lbl{color:#888780}
+.info-row .val{font-weight:500;color:#1C1C1A}
+
+.section-title{font-size:11px;font-weight:600;color:#B4B2A9;letter-spacing:0.06em;text-transform:uppercase;margin-bottom:0.65rem;margin-top:0.5rem}
+
+.history-item{display:flex;justify-content:space-between;align-items:center;padding:8px 0;font-size:12px;border-bottom:1px solid #F1EFE8}
+.history-item:last-child{border-bottom:none}
+.history-date{color:#5F5E5A;flex:1}
+.history-qty{color:#854F0B;font-weight:500;margin:0 8px;white-space:nowrap}
+.history-dur{color:#888780;font-weight:500;white-space:nowrap}
+
+.record-area{background:#F7F6F2;border-radius:10px;padding:1rem;margin-bottom:1rem}
+
+.unit-hint{font-size:11px;color:#B4B2A9;margin-top:4px}
+
+@media(max-width:500px){
+  .summary-bar{grid-template-columns:repeat(3,1fr)}
+  .scard .num{font-size:18px}
+  .grid{grid-template-columns:repeat(2,1fr)}
+  .form-row{grid-template-columns:1fr}
+  .form-row-3{grid-template-columns:1fr 1fr}
+}
+</style>
+</head>
+<body>
+<div class="app">
+  <div class="header">
+    <div class="header-text">
+      <h1>🏠 Ev Stok Takibi</h1>
+      <p id="header-sub"><span class="sync-dot loading" id="sync-dot"></span><span id="sync-text">Bağlanıyor...</span></p>
+    </div>
+    <button class="add-btn" onclick="openAdd()">＋ Ürün Ekle</button>
+  </div>
+
+  <div class="summary-bar">
+    <div class="scard"><div class="num" id="s-total">—</div><div class="lbl">toplam ürün</div></div>
+    <div class="scard warn"><div class="num" id="s-warn">—</div><div class="lbl">yakında bitecek</div></div>
+    <div class="scard danger"><div class="num" id="s-out">—</div><div class="lbl">bitti</div></div>
+  </div>
+
+  <div class="tabs">
+    <button class="tab active" onclick="setTab('all',this)">Tümü</button>
+    <button class="tab" onclick="setTab('danger',this)">⚠ Bitti</button>
+    <button class="tab" onclick="setTab('warn',this)">⚡ Yakında Bitecek</button>
+    <button class="tab" onclick="setTab('ok',this)">✓ Yeterli</button>
+  </div>
+
+  <div class="grid" id="product-grid">
+    <div class="empty" style="grid-column:1/-1"><div class="empty-icon">⏳</div>Yükleniyor...</div>
+  </div>
+</div>
+
+<div class="modal-bg" id="modal-bg" style="display:none">
+  <div class="modal" id="modal-content"></div>
+</div>
+
+<script src="https://cdnjs.cloudflare.com/ajax/libs/firebase/10.12.2/firebase-app-compat.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/firebase/10.12.2/firebase-database-compat.min.js"></script>
+
+<script>
+const firebaseConfig = {
+  apiKey: "AIzaSyA3JzApShar7jjR13j_z69-E7njxfID6ew",
+  authDomain: "ev-stok-e0e64.firebaseapp.com",
+  databaseURL: "https://ev-stok-e0e64-default-rtdb.europe-west1.firebasedatabase.app",
+  projectId: "ev-stok-e0e64",
+  storageBucket: "ev-stok-e0e64.firebasestorage.app",
+  messagingSenderId: "462947130561",
+  appId: "1:462947130561:web:96e2a97c72159cc155c840"
+};
+
+firebase.initializeApp(firebaseConfig);
+const db = firebase.database();
+const productsRef = db.ref('products');
+
+let products = {};
+let currentTab = 'all';
+
+function setSyncStatus(state, text) {
+  document.getElementById('sync-dot').className = 'sync-dot ' + state;
+  document.getElementById('sync-text').textContent = text;
+}
+
+productsRef.on('value', snapshot => {
+  products = snapshot.val() || {};
+  setSyncStatus('ok', 'Senkronize');
+  renderGrid();
+}, err => {
+  setSyncStatus('err', 'Bağlantı hatası');
+});
+
+function fbSet(id, data) {
+  setSyncStatus('loading', 'Kaydediliyor...');
+  return productsRef.child(id).set(data);
+}
+function fbRemove(id) {
+  setSyncStatus('loading', 'Siliniyor...');
+  return productsRef.child(id).remove();
+}
+
+// ── Kategoriler ───────────────────────────────────────────────
+const CATS = {
+  'Yiyecek':'🥫',
+  'İçecek':'🧃',
+  'Temizlik':'🧹',
+  'Mutfak':'🍳',
+  'Kişisel Bakım':'🧴',
+  'Kağıt Ürünleri':'🧻',
+  'Diğer':'📦'
+};
+
+// ── Birimler ──────────────────────────────────────────────────
+// birim yoksa (eski ürünler) null kabul edilir → eski davranış korunur
+const UNITS = ['adet', 'rulo', 'kg', 'g', 'L', 'mL', 'paket', 'kutu', 'şişe', 'demet'];
+
+// ── Yardımcılar ───────────────────────────────────────────────
+function today() { return new Date().toISOString().split('T')[0]; }
+
+function daysBetween(a, b) {
+  return Math.round((new Date(b) - new Date(a)) / (1000 * 60 * 60 * 24));
+}
+
+// Birim başına ortalama gün hesabı.
+// Her kayıtta qty varsa: gün / qty → birim başına ömür
+// qty yoksa (eski kayıtlar): direkt gün kullan (birim = 1 kabul)
+function getAvgDaysPerUnit(p) {
+  if (!p.history) return null;
+  const entries = Object.values(p.history);
+  if (!entries.length) return null;
+
+  const rates = entries
+    .map(h => {
+      const d = daysBetween(h.bought, h.ran_out);
+      const q = h.qty > 0 ? h.qty : 1;
+      return d > 0 ? d / q : null;
+    })
+    .filter(r => r !== null);
+
+  if (!rates.length) return null;
+
+  // Ağırlıklı ortalama — son ölçümlere daha fazla ağırlık
+  let wSum = 0, wTotal = 0;
+  rates.forEach((r, i) => { const w = i + 1; wSum += r * w; wTotal += w; });
+  return wSum / wTotal;
+}
+
+// Şu anki alımla kalan gün tahmini
+function getDaysLeft(p) {
+  if (!p.lastBought) return null;
+  const lastQty = p.lastQty > 0 ? p.lastQty : 1;
+  const rate = getAvgDaysPerUnit(p);
+  const avg = rate !== null
+    ? Math.round(rate * lastQty)
+    : (p.estDays || 30);
+  const elapsed = daysBetween(p.lastBought, today());
+  return avg - elapsed;
+}
+
+// Kartlarda göstermek için ortalama ömür metni
+function avgLabel(p) {
+  const rate = getAvgDaysPerUnit(p);
+  const n = p.history ? Object.keys(p.history).length : 0;
+  const conf = n === 0 ? 'başlangıç tahmini' : n === 1 ? '1 ölçüm' : `${n} ölçüm`;
+  if (rate !== null && p.unit) {
+    return `ort. ${Math.round(rate)} gün/${p.unit} · ${conf}`;
+  }
+  const avg = rate !== null ? Math.round(rate) : (p.estDays || 30);
+  return `ort. ${avg} gün · ${conf}`;
+}
+
+function getStatus(dl) {
+  if (dl === null) return 'out';
+  if (dl <= 0) return 'danger';
+  if (dl <= 7) return 'warn';
+  return 'ok';
+}
+
+function getBarColor(pct) {
+  if (pct > 0.4) return '#3B6D11';
+  if (pct > 0.15) return '#854F0B';
+  return '#A32D2D';
+}
+
+function ringHtml(pct) {
+  const size = 46, stroke = 5, rad = (size - stroke) / 2;
+  const circ = 2 * Math.PI * rad;
+  const dash = circ * (1 - Math.max(0, Math.min(1, pct)));
+  const col = getBarColor(pct);
+  return `<svg width="${size}" height="${size}" viewBox="0 0 ${size} ${size}" style="flex-shrink:0">
+    <circle cx="${size/2}" cy="${size/2}" r="${rad}" fill="none" stroke="#F1EFE8" stroke-width="${stroke}"/>
+    <circle cx="${size/2}" cy="${size/2}" r="${rad}" fill="none" stroke="${col}" stroke-width="${stroke}"
+      stroke-dasharray="${circ.toFixed(2)}" stroke-dashoffset="${dash.toFixed(2)}" stroke-linecap="round"
+      transform="rotate(-90 ${size/2} ${size/2})"/>
+  </svg>`;
+}
+
+function badgeHtml(status) {
+  return {
+    ok:     '<span class="badge badge-ok">✓ Yeterli</span>',
+    warn:   '<span class="badge badge-warn">⚡ Yakında Bitecek</span>',
+    danger: '<span class="badge badge-danger">⚠ Bitti</span>',
+    out:    '<span class="badge badge-out">⚠ Bitti</span>'
+  }[status] || '';
+}
+
+function formatDate(d) {
+  if (!d) return '—';
+  const [y, m, day] = d.split('-');
+  return `${day}.${m}.${y}`;
+}
+
+function uid() { return productsRef.push().key; }
+
+// ── Grid ──────────────────────────────────────────────────────
+function renderGrid() {
+  const grid = document.getElementById('product-grid');
+  let list = Object.entries(products).map(([id, p]) => ({ ...p, id }));
+
+  list.sort((a, b) => {
+    const order = { danger: 0, out: 1, warn: 2, ok: 3 };
+    return (order[getStatus(getDaysLeft(a))] || 0) - (order[getStatus(getDaysLeft(b))] || 0);
+  });
+
+  if (currentTab === 'danger') list = list.filter(p => ['danger','out'].includes(getStatus(getDaysLeft(p))));
+  else if (currentTab === 'warn') list = list.filter(p => getStatus(getDaysLeft(p)) === 'warn');
+  else if (currentTab === 'ok') list = list.filter(p => getStatus(getDaysLeft(p)) === 'ok');
+
+  updateSummary();
+
+  if (!list.length) {
+    grid.innerHTML = `<div class="empty"><div class="empty-icon">📦</div>${
+      Object.keys(products).length ? 'Bu filtrede ürün yok.' : 'Henüz ürün eklenmedi.<br><small>"Ürün Ekle" ile başlayın.</small>'
+    }</div>`;
+    return;
+  }
+
+  grid.innerHTML = list.map(p => {
+    const dl = getDaysLeft(p);
+    const status = getStatus(dl);
+    const rate = getAvgDaysPerUnit(p);
+    const totalAvg = rate !== null
+      ? Math.round(rate * (p.lastQty > 0 ? p.lastQty : 1))
+      : (p.estDays || 30);
+    const pct = (dl !== null && totalAvg > 0) ? Math.max(0, dl / totalAvg) : 0;
+    const daysText = dl === null ? '—' : dl <= 0 ? 'Bitti!' : dl === 1 ? '1 gün' : `${dl} gün`;
+    const icon = CATS[p.category] || '📦';
+    return `<div class="card" onclick="openDetail('${p.id}')">
+      <div class="card-emoji">${icon}</div>
+      <div class="card-name" title="${p.name}">${p.name}</div>
+      <div class="card-cat">${p.category}${p.unit ? ' · ' + p.unit : ''}</div>
+      ${badgeHtml(status)}
+      <div class="ring-wrap">
+        ${ringHtml(pct)}
+        <div class="ring-info">
+          <div class="days-left">${daysText}</div>
+          <div class="days-label">${dl !== null && dl > 0 ? 'kaldı' : ''}</div>
+        </div>
+      </div>
+      <div class="avg-line">${avgLabel(p)}</div>
+    </div>`;
+  }).join('');
+}
+
+function updateSummary() {
+  const all = Object.values(products);
+  document.getElementById('s-total').textContent = all.length;
+  document.getElementById('s-warn').textContent = all.filter(p => getStatus(getDaysLeft(p)) === 'warn').length;
+  document.getElementById('s-out').textContent = all.filter(p => ['danger','out'].includes(getStatus(getDaysLeft(p)))).length;
+}
+
+function setTab(t, el) {
+  currentTab = t;
+  document.querySelectorAll('.tab').forEach(b => b.classList.remove('active'));
+  el.classList.add('active');
+  renderGrid();
+}
+
+// ── Ürün Ekle ────────────────────────────────────────────────
+function openAdd() {
+  const t = today();
+  document.getElementById('modal-content').innerHTML = `
+    <div class="modal-header">
+      <h2>Yeni Ürün Ekle</h2>
+      <button class="close-btn" onclick="closeModal()">×</button>
+    </div>
+    <div class="form-group">
+      <label>Ürün adı</label>
+      <input id="f-name" placeholder="Örn: Çay, Deterjan, Tuvalet Kağıdı…" autofocus />
+    </div>
+    <div class="form-row">
+      <div class="form-group">
+        <label>Kategori</label>
+        <select id="f-cat">${Object.keys(CATS).map(c => `<option>${c}</option>`).join('')}</select>
+      </div>
+      <div class="form-group">
+        <label>Birim <span style="color:#B4B2A9;font-weight:400">(opsiyonel)</span></label>
+        <select id="f-unit">
+          <option value="">— birimsiz —</option>
+          ${UNITS.map(u => `<option>${u}</option>`).join('')}
+        </select>
+      </div>
+    </div>
+    <div class="form-row">
+      <div class="form-group">
+        <label>Tahmini ömür (gün)</label>
+        <input id="f-est" type="number" min="1" value="30" />
+        <div class="unit-hint" id="f-est-hint">1 birim için başlangıç tahmini</div>
+      </div>
+      <div class="form-group" id="f-qty-group" style="display:none">
+        <label>İlk alım miktarı</label>
+        <input id="f-qty" type="number" min="0.1" step="0.1" value="1" />
+        <div class="unit-hint" id="f-qty-hint"></div>
+      </div>
+    </div>
+    <div class="form-group">
+      <label>Mevcut durum</label>
+      <div style="display:flex;gap:8px;margin-top:2px">
+        <label style="flex:1;display:flex;align-items:center;gap:8px;padding:9px 12px;border:1px solid #D3D1C7;border-radius:9px;cursor:pointer;font-size:13px" id="lbl-have">
+          <input type="radio" name="f-status" value="have" checked onchange="toggleBoughtField()" style="width:auto;margin:0" />
+          🛒 Az önce aldım
+        </label>
+        <label style="flex:1;display:flex;align-items:center;gap:8px;padding:9px 12px;border:1px solid #D3D1C7;border-radius:9px;cursor:pointer;font-size:13px" id="lbl-need">
+          <input type="radio" name="f-status" value="need" onchange="toggleBoughtField()" style="width:auto;margin:0" />
+          ⚠ Şu an eksik
+        </label>
+      </div>
+    </div>
+    <div class="form-group" id="bought-field">
+      <label>Ne zaman aldınız?</label>
+      <input id="f-bought" type="date" value="${t}" />
+    </div>
+    <div class="modal-actions">
+      <button class="btn" onclick="closeModal()">İptal</button>
+      <button class="btn primary" onclick="addProduct()">Kaydet</button>
+    </div>`;
+  document.getElementById('modal-bg').style.display = 'flex';
+  setTimeout(() => document.getElementById('f-name').focus(), 50);
+
+  document.getElementById('f-unit').addEventListener('change', function() {
+    const u = this.value;
+    const qg = document.getElementById('f-qty-group');
+    const hint = document.getElementById('f-est-hint');
+    const qhint = document.getElementById('f-qty-hint');
+    if (u) {
+      qg.style.display = '';
+      hint.textContent = `1 ${u} için başlangıç tahmini`;
+      qhint.textContent = u;
+    } else {
+      qg.style.display = 'none';
+      hint.textContent = '1 birim için başlangıç tahmini';
+    }
+  });
+}
+
+function toggleBoughtField() {
+  const val = document.querySelector('input[name="f-status"]:checked').value;
+  document.getElementById('bought-field').style.display = val === 'have' ? '' : 'none';
+  document.getElementById('lbl-have').style.borderColor = val === 'have' ? '#1C1C1A' : '#D3D1C7';
+  document.getElementById('lbl-need').style.borderColor = val === 'need' ? '#A32D2D' : '#D3D1C7';
+  document.getElementById('lbl-need').style.background = val === 'need' ? '#FCEBEB' : '';
+  document.getElementById('lbl-need').style.color = val === 'need' ? '#A32D2D' : '';
+}
+
+function addProduct() {
+  const name = document.getElementById('f-name').value.trim();
+  if (!name) { alert('Lütfen ürün adı girin.'); return; }
+  const statusVal = (document.querySelector('input[name="f-status"]:checked') || {}).value || 'have';
+  const boughtEl = document.getElementById('f-bought');
+  const lastBought = statusVal === 'have' ? (boughtEl ? boughtEl.value || today() : today()) : null;
+  const unit = document.getElementById('f-unit').value || null;
+  const qtyEl = document.getElementById('f-qty');
+  const lastQty = unit && qtyEl ? (parseFloat(qtyEl.value) || 1) : null;
+  const id = uid();
+  const p = {
+    id, name,
+    category: document.getElementById('f-cat').value,
+    unit: unit || null,
+    lastQty: lastQty || null,
+    estDays: parseInt(document.getElementById('f-est').value) || 30,
+    lastBought: lastBought || null,
+    history: {}
+  };
+  fbSet(id, p).then(() => closeModal());
+}
+
+// ── Ürün Detay ───────────────────────────────────────────────
+function openDetail(id) {
+  const p = { ...products[id], id };
+  if (!p.name) return;
+  const dl = getDaysLeft(p);
+  const status = getStatus(dl);
+  const icon = CATS[p.category] || '📦';
+  const rate = getAvgDaysPerUnit(p);
+  const lastQty = p.lastQty > 0 ? p.lastQty : 1;
+  const totalAvg = rate !== null ? Math.round(rate * lastQty) : (p.estDays || 30);
+
+  let estimatedEnd = '—';
+  if (p.lastBought && dl !== null) {
+    const d = new Date(p.lastBought);
+    d.setDate(d.getDate() + totalAvg);
+    estimatedEnd = formatDate(d.toISOString().split('T')[0]);
+  }
+
+  const historyArr = p.history ? Object.values(p.history) : [];
+  const historyHtml = historyArr.length
+    ? historyArr.slice().reverse().map(h => {
+        const dur = daysBetween(h.bought, h.ran_out);
+        const qtyStr = h.qty && p.unit ? `${h.qty} ${p.unit}` : '';
+        const rate = h.qty > 0 ? Math.round(dur / h.qty) : null;
+        const rateStr = rate && p.unit ? ` · ${rate} gün/${p.unit}` : '';
+        return `<div class="history-item">
+          <span class="history-date">🛒 ${formatDate(h.bought)} → 🏁 ${formatDate(h.ran_out)}</span>
+          ${qtyStr ? `<span class="history-qty">${qtyStr}</span>` : ''}
+          <span class="history-dur">${dur} gün${rateStr}</span>
+        </div>`;
+      }).join('')
+    : '<div style="font-size:12px;color:#B4B2A9;padding:6px 0">Henüz tükenme kaydı yok.</div>';
+
+  const unitLabel = p.unit ? ` (${p.unit})` : '';
+
+  document.getElementById('modal-content').innerHTML = `
+    <div class="modal-header">
+      <div style="display:flex;align-items:center;gap:10px">
+        <span style="font-size:28px">${icon}</span>
+        <div>
+          <h2>${p.name}</h2>
+          <div style="font-size:12px;color:#888780">${p.category}${p.unit ? ' · ' + p.unit : ''}</div>
+        </div>
+      </div>
+      <button class="close-btn" onclick="closeModal()">×</button>
+    </div>
+
+    ${badgeHtml(status)}
+
+    <div class="info-box">
+      <div class="info-row"><span class="lbl">Son alım</span><span class="val">${formatDate(p.lastBought)}${p.unit && p.lastQty ? ' · ' + p.lastQty + ' ' + p.unit : ''}</span></div>
+      <div class="info-row"><span class="lbl">Tahmini bitiş</span><span class="val">${estimatedEnd}</span></div>
+      <div class="info-row"><span class="lbl">${rate !== null && p.unit ? 'Ort. tüketim hızı' : 'Ortalama ömür'}</span>
+        <span class="val">${rate !== null && p.unit ? Math.round(rate) + ' gün/' + p.unit : totalAvg + ' gün'} (${avgLabel(p).split('·')[1]?.trim() || 'tahmini'})</span></div>
+      <div class="info-row"><span class="lbl">Kalan</span>
+        <span class="val" style="color:${dl===null?'#888':dl<=0?'#A32D2D':dl<=7?'#854F0B':'#3B6D11'}">${dl===null?'—':dl<=0?'Tükenmiş!':dl+' gün'}</span></div>
+    </div>
+
+    <div class="record-area">
+      <div class="section-title">Tükenme kaydı ekle</div>
+      <div class="form-row">
+        <div class="form-group">
+          <label>Bu sefer alındı</label>
+          <input id="d-bought" type="date" value="${p.lastBought || today()}" />
+        </div>
+        <div class="form-group">
+          <label>Tükendiği gün</label>
+          <input id="d-out" type="date" value="${today()}" />
+        </div>
+      </div>
+      ${p.unit ? `
+      <div class="form-group">
+        <label>O alımda kaç ${p.unit} almıştınız?</label>
+        <input id="d-qty" type="number" min="0.1" step="0.1" value="${p.lastQty || 1}" />
+      </div>` : ''}
+      <button class="btn primary" style="width:100%" onclick="recordUsage('${p.id}')">
+        ✓ Kaydet — yeni alım başlıyor
+      </button>
+    </div>
+
+    <div class="section-title">Geçmiş tüketimler</div>
+    ${historyHtml}
+
+    <div class="modal-actions" style="margin-top:1.25rem">
+      <button class="btn danger" onclick="deleteProduct('${p.id}')">Sil</button>
+      <button class="btn" onclick="openEdit('${p.id}')">Düzenle</button>
+      <button class="btn primary" onclick="closeModal()">Kapat</button>
+    </div>`;
+  document.getElementById('modal-bg').style.display = 'flex';
+}
+
+function recordUsage(id) {
+  const p = { ...products[id], id };
+  const bought = document.getElementById('d-bought').value;
+  const ran_out = document.getElementById('d-out').value;
+  if (!bought || !ran_out) { alert('Lütfen tarihleri doldurun.'); return; }
+  if (ran_out < bought) { alert('Bitiş tarihi, alım tarihinden önce olamaz.'); return; }
+
+  const qtyEl = document.getElementById('d-qty');
+  const qty = qtyEl ? (parseFloat(qtyEl.value) || 1) : null;
+
+  const historyKey = productsRef.child(id).child('history').push().key;
+  const updates = {};
+  updates[`products/${id}/lastBought`] = ran_out;
+  if (qty !== null) updates[`products/${id}/lastQty`] = qty;
+  const histEntry = { bought, ran_out };
+  if (qty !== null) histEntry.qty = qty;
+  updates[`products/${id}/history/${historyKey}`] = histEntry;
+
+  setSyncStatus('loading', 'Kaydediliyor...');
+  db.ref().update(updates).then(() => closeModal());
+}
+
+// ── Düzenle ──────────────────────────────────────────────────
+function openEdit(id) {
+  const p = { ...products[id], id };
+  document.getElementById('modal-content').innerHTML = `
+    <div class="modal-header">
+      <h2>Ürünü Düzenle</h2>
+      <button class="close-btn" onclick="closeModal()">×</button>
+    </div>
+    <div class="form-group"><label>Ürün adı</label><input id="e-name" value="${p.name}" /></div>
+    <div class="form-row">
+      <div class="form-group">
+        <label>Kategori</label>
+        <select id="e-cat">${Object.keys(CATS).map(c => `<option${c===p.category?' selected':''}>${c}</option>`).join('')}</select>
+      </div>
+      <div class="form-group">
+        <label>Birim</label>
+        <select id="e-unit">
+          <option value=""${!p.unit?' selected':''}>— birimsiz —</option>
+          ${UNITS.map(u => `<option${u===p.unit?' selected':''}>${u}</option>`).join('')}
+        </select>
+      </div>
+    </div>
+    <div class="form-row">
+      <div class="form-group">
+        <label>Başlangıç tahmini (gün)</label>
+        <input id="e-est" type="number" min="1" value="${p.estDays || 30}" />
+      </div>
+      <div class="form-group">
+        <label>Son alım tarihi</label>
+        <input id="e-bought" type="date" value="${p.lastBought||''}" />
+      </div>
+    </div>
+    <div class="modal-actions">
+      <button class="btn" onclick="openDetail('${p.id}')">Geri</button>
+      <button class="btn primary" onclick="saveEdit('${p.id}')">Kaydet</button>
+    </div>`;
+}
+
+function saveEdit(id) {
+  const name = document.getElementById('e-name').value.trim();
+  if (!name) { alert('Ürün adı boş bırakılamaz.'); return; }
+  const updates = {
+    [`products/${id}/name`]: name,
+    [`products/${id}/category`]: document.getElementById('e-cat').value,
+    [`products/${id}/unit`]: document.getElementById('e-unit').value || null,
+    [`products/${id}/estDays`]: parseInt(document.getElementById('e-est').value) || 30,
+    [`products/${id}/lastBought`]: document.getElementById('e-bought').value || null
+  };
+  setSyncStatus('loading', 'Kaydediliyor...');
+  db.ref().update(updates).then(() => closeModal());
+}
+
+// ── Sil ──────────────────────────────────────────────────────
+function deleteProduct(id) {
+  if (!confirm('Bu ürün silinsin mi?')) return;
+  fbRemove(id).then(() => closeModal());
+}
+
+function closeModal() { document.getElementById('modal-bg').style.display = 'none'; }
+document.getElementById('modal-bg').addEventListener('click', e => {
+  if (e.target === e.currentTarget) closeModal();
+});
+</script>
+</body>
+</html>
