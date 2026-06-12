@@ -18,25 +18,26 @@ body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;backgrou
 .scard.warn .num{color:#854F0B}
 .scard.danger .num{color:#A32D2D}
 
-.tabs{display:flex;gap:6px;margin-bottom:1rem;flex-wrap:wrap}
+.tabs{display:flex;gap:6px;margin-bottom:0;flex-wrap:nowrap;overflow-x:auto;-webkit-overflow-scrolling:touch;scrollbar-width:none;padding-bottom:2px}
+.tabs::-webkit-scrollbar{display:none}
 .tab{padding:6px 14px;border-radius:20px;font-size:13px;cursor:pointer;border:1px solid #D3D1C7;background:#fff;color:#5F5E5A}
 .tab.active{background:#1C1C1A;color:#F7F6F2;border-color:transparent}
 
-.grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(160px,1fr));gap:10px;margin-bottom:2rem}
-.card{background:#fff;border:1px solid #E8E7E2;border-radius:14px;padding:1rem;cursor:pointer;transition:border-color 0.15s,transform 0.1s}
-.card:hover{border-color:#B4B2A9;transform:translateY(-1px)}
-.card-emoji{font-size:22px;margin-bottom:8px}
-.card-name{font-size:14px;font-weight:600;color:#1C1C1A;margin-bottom:2px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
-.card-cat{font-size:11px;color:#888780;margin-bottom:8px}
+.grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(110px,1fr));gap:7px;margin-bottom:2rem}
+.card{background:#fff;border:1px solid #E8E7E2;border-radius:12px;padding:0.75rem;cursor:pointer;transition:border-color 0.15s}
+.card:hover{border-color:#B4B2A9}
+.card-emoji{font-size:18px;margin-bottom:5px}
+.card-name{font-size:12px;font-weight:600;color:#1C1C1A;margin-bottom:2px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.card-cat{font-size:10px;color:#888780;margin-bottom:6px}
 
-.card-qty-bar{margin:8px 0 4px}
-.qty-bar-bg{height:5px;background:#F1EFE8;border-radius:3px;overflow:hidden;margin-top:4px}
+.card-qty-bar{margin:5px 0 3px}
+.qty-bar-bg{height:4px;background:#F1EFE8;border-radius:3px;overflow:hidden;margin-top:3px}
 .qty-bar-fill{height:100%;border-radius:3px;transition:width 0.3s}
 
-.card-stats{font-size:11px;color:#888780;margin-top:6px}
+.card-stats{font-size:10px;color:#888780;margin-top:4px}
 .card-stats span{color:#1C1C1A;font-weight:500}
 
-.badge{display:inline-block;font-size:10px;font-weight:600;padding:3px 8px;border-radius:20px;margin-bottom:8px;letter-spacing:0.02em}
+.badge{display:inline-block;font-size:9px;font-weight:600;padding:2px 7px;border-radius:20px;margin-bottom:6px;letter-spacing:0.02em}
 .badge-ok{background:#EAF3DE;color:#3B6D11}
 .badge-warn{background:#FAEEDA;color:#854F0B}
 .badge-danger{background:#FCEBEB;color:#A32D2D}
@@ -98,10 +99,9 @@ body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;backgrou
 .detail-panel{display:none}
 .detail-panel.active{display:block}
 
-@media(max-width:500px){
-  .grid{grid-template-columns:repeat(2,1fr)}
+@media(max-width:600px){
+  .grid{grid-template-columns:repeat(3,1fr)}
   .form-row{grid-template-columns:1fr}
-  .scard .num{font-size:20px}
 }
 
 /* Header inline stats */
@@ -111,17 +111,7 @@ body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;backgrou
 .scard-inline.danger .num-inline{color:#A32D2D}
 .lbl-inline{font-size:11px;color:#888780}
 
-/* Kompakt mod */
-.grid.compact{grid-template-columns:repeat(auto-fill,minmax(120px,1fr));gap:7px}
-.grid.compact .card{padding:0.7rem}
-.grid.compact .card-emoji{font-size:17px;margin-bottom:5px}
-.grid.compact .card-name{font-size:12px;margin-bottom:1px}
-.grid.compact .card-cat{font-size:10px;margin-bottom:5px}
-.grid.compact .badge{font-size:9px;padding:2px 6px;margin-bottom:5px}
-.grid.compact .card-qty-bar{margin:5px 0 2px}
-.grid.compact .qty-bar-bg{height:4px}
-.grid.compact .card-stats{font-size:10px;margin-top:3px}
-.grid.compact .days-left{font-size:16px}
+
 
 /* Kategori chip'leri */
 .cat-filters{display:flex;gap:6px;margin-bottom:1rem;flex-wrap:nowrap;overflow-x:auto;-webkit-overflow-scrolling:touch;scrollbar-width:none;padding-bottom:2px}
@@ -129,8 +119,7 @@ body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;backgrou
 .cat-chip{padding:5px 12px;border-radius:20px;font-size:12px;cursor:pointer;border:1px solid #D3D1C7;background:#fff;color:#5F5E5A;white-space:nowrap}
 .cat-chip.active{background:#F7F6F2;border-color:#888780;color:#1C1C1A;font-weight:500}
 
-.view-toggle{display:flex;align-items:center;gap:6px;font-size:12px;color:#888780;cursor:pointer;padding:5px 10px;border:1px solid #D3D1C7;border-radius:20px;background:#fff;white-space:nowrap}
-.view-toggle:hover{background:#F7F6F2}
+
 </style>
 </head>
 <body>
@@ -140,24 +129,24 @@ body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;backgrou
       <h1>🏠 Ev Stok Takibi</h1>
       <p><span class="sync-dot loading" id="sync-dot"></span><span id="sync-text">Bağlanıyor...</span></p>
     </div>
-    <div style="display:flex;align-items:center;background:#fff;border:1px solid #E8E7E2;border-radius:10px;padding:6px 12px;gap:0;flex:1;justify-content:center;min-width:0;max-width:320px">
-      <div class="scard-inline"><span class="num-inline" id="s-total">—</span><span class="lbl-inline">ürün</span></div>
-      <div style="width:1px;background:#E8E7E2;height:20px;margin:0 10px"></div>
-      <div class="scard-inline warn"><span class="num-inline" id="s-warn">—</span><span class="lbl-inline">yakında</span></div>
-      <div style="width:1px;background:#E8E7E2;height:20px;margin:0 10px"></div>
-      <div class="scard-inline danger"><span class="num-inline" id="s-out">—</span><span class="lbl-inline">bitti</span></div>
-    </div>
     <button class="add-btn" onclick="openAdd()">＋ Ürün Ekle</button>
   </div>
+  <div style="display:flex;align-items:center;background:#fff;border:1px solid #E8E7E2;border-radius:10px;padding:8px 14px;gap:0;margin-bottom:1rem">
+    <div class="scard-inline"><span class="num-inline" id="s-total">—</span><span class="lbl-inline">ürün</span></div>
+    <div style="width:1px;background:#E8E7E2;height:18px;margin:0 12px"></div>
+    <div class="scard-inline warn"><span class="num-inline" id="s-warn">—</span><span class="lbl-inline">yakında bitecek</span></div>
+    <div style="width:1px;background:#E8E7E2;height:18px;margin:0 12px"></div>
+    <div class="scard-inline danger"><span class="num-inline" id="s-out">—</span><span class="lbl-inline">bitti</span></div>
+  </div>
 
-  <div style="display:flex;align-items:center;justify-content:space-between;gap:8px;flex-wrap:wrap;margin-bottom:0.5rem">
-    <div class="tabs" style="margin-bottom:0">
+  <div style="display:flex;align-items:center;justify-content:space-between;gap:8px;margin-bottom:0.75rem;overflow:hidden">
+    <div class="tabs" style="flex:1;min-width:0">
       <button class="tab active" onclick="setTab('all',this)">Tümü</button>
       <button class="tab" onclick="setTab('danger',this)">⚠ Bitti</button>
       <button class="tab" onclick="setTab('warn',this)">⚡ Yakında Bitecek</button>
       <button class="tab" onclick="setTab('ok',this)">✓ Yeterli</button>
     </div>
-    <button class="view-toggle" onclick="toggleCompact(this)" id="compact-btn">⊞ Kompakt</button>
+
   </div>
   <div class="cat-filters" id="cat-filters"></div>
 
@@ -321,8 +310,6 @@ function renderGrid() {
 
   updateSummary();
 
-  if (compactMode) grid.classList.add('compact'); else grid.classList.remove('compact');
-
   if (!list.length) {
     grid.innerHTML = `<div class="empty"><div class="empty-icon">📦</div>${
       Object.keys(products).length ? 'Bu filtrede ürün yok.' : 'Henüz ürün eklenmedi.<br><small>"Ürün Ekle" ile başlayın.</small>'
@@ -375,8 +362,6 @@ function updateSummary() {
 }
 
 let currentCat = 'all';
-let compactMode = false;
-
 function setTab(t, el) {
   currentTab = t;
   document.querySelectorAll('.tab').forEach(b => b.classList.remove('active'));
@@ -402,12 +387,7 @@ function renderCatFilters() {
   }).join('');
 }
 
-function toggleCompact(btn) {
-  compactMode = !compactMode;
-  btn.textContent = compactMode ? '⊟ Normal' : '⊞ Kompakt';
-  const grid = document.getElementById('product-grid');
-  if (grid) grid.classList.toggle('compact', compactMode);
-}
+
 
 // ── Ürün Ekle ────────────────────────────────────────────────
 function openAdd() {
