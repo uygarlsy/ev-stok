@@ -111,6 +111,28 @@ input[type="date"] {
   width: 100% !important;
 }
 
+/* Liste görünümü */
+.grid.list-view {
+  display:flex;flex-direction:column;gap:5px;
+  grid-template-columns:unset;
+}
+.grid.list-view .card {
+  display:flex;align-items:center;gap:10px;
+  padding:9px 12px;border-radius:10px;
+}
+.grid.list-view .card-emoji { font-size:18px;margin:0;flex-shrink:0 }
+.grid.list-view .card-name  { font-size:13px;font-weight:600;margin:0;flex:1;min-width:0;white-space:nowrap;overflow:hidden;text-overflow:ellipsis }
+.grid.list-view .card-cat   { display:none }
+.grid.list-view .badge      { display:none }
+.grid.list-view .card-qty-bar { display:none }
+.grid.list-view .card-stats { display:none }
+.grid.list-view .list-meta  { display:flex;align-items:center;gap:8px;flex-shrink:0 }
+.grid.list-view .list-stock { font-size:12px;font-weight:600;color:#1C1C1A;white-space:nowrap }
+.grid.list-view .list-days  { font-size:11px;color:#888780;white-space:nowrap }
+.grid.list-view .list-badge { font-size:9px;font-weight:600;padding:2px 7px;border-radius:20px;white-space:nowrap }
+/* Normal görünümde liste meta gizli */
+.list-meta { display:none }
+
 /* Header inline stats */
 .scard-inline{display:flex;align-items:baseline;gap:4px;white-space:nowrap}
 .num-inline{font-size:18px;font-weight:600;color:#1C1C1A}
@@ -357,6 +379,11 @@ function renderGrid() {
       </div>
       <div class="card-stats">Tahmini: <span>${daysText}</span></div>
       <div class="card-stats">Hız: <span>${rateText}</span></div>
+      <div class="list-meta">
+        <span class="list-stock">${stockText}</span>
+        <span class="list-days">${daysText}</span>
+        <span class="list-badge ${status==='ok'?'badge-ok':status==='warn'?'badge-warn':status==='danger'?'badge-danger':'badge-nodata'}">${status==='ok'?'✓':status==='warn'?'⚡':status==='danger'?'⚠':'?'}</span>
+      </div>
     </div>`;
   }).join('');
 }
@@ -678,6 +705,15 @@ function deleteProduct(id) {
   if (!confirm('Bu ürün silinsin mi?')) return;
   sync('loading', 'Siliniyor...');
   ref.child(id).remove().then(() => closeModal());
+}
+
+let listView = false;
+
+function toggleListView(btn) {
+  listView = !listView;
+  btn.textContent = listView ? '⊞ Grid' : '☰ Liste';
+  const grid = document.getElementById('product-grid');
+  if (grid) grid.classList.toggle('list-view', listView);
 }
 
 function switchDetailTab2(panel, el) {
