@@ -440,7 +440,7 @@ function openAdd() {
       <button class="btn" onclick="closeModal()">İptal</button>
       <button class="btn primary" onclick="addProduct()">Kaydet</button>
     </div>`;
-  document.getElementById('modal-bg').style.display = 'flex';
+  document.getElementById('modal-bg').style.display = 'flex'; document.body.style.overflow = 'hidden';
   setTimeout(() => document.getElementById('f-name').focus(), 50);
 }
 
@@ -601,7 +601,7 @@ function openDetail(id) {
       <button class="btn" onclick="openEdit('${id}')">Düzenle</button>
       <button class="btn primary" onclick="closeModal()">Kapat</button>
     </div>`;
-  document.getElementById('modal-bg').style.display = 'flex';
+  document.getElementById('modal-bg').style.display = 'flex'; document.body.style.overflow = 'hidden';
 }
 
 function addConsumption(id) {
@@ -691,7 +691,10 @@ function switchDetailTab2(panel, el) {
   el.classList.add('active');
 }
 
-function closeModal() { document.getElementById('modal-bg').style.display = 'none'; }
+function closeModal() {
+  document.getElementById('modal-bg').style.display = 'none';
+  document.body.style.overflow = '';
+}
 document.getElementById('modal-bg').addEventListener('click', e => {
   if (e.target === e.currentTarget) closeModal();
 });
