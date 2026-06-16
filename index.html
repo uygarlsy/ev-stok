@@ -23,8 +23,9 @@ body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;backgrou
 .tab{padding:6px 14px;border-radius:20px;font-size:13px;cursor:pointer;border:1px solid #D3D1C7;background:#fff;color:#5F5E5A}
 .tab.active{background:#1C1C1A;color:#F7F6F2;border-color:transparent}
 
-.grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(110px,1fr));gap:7px;margin-bottom:2rem}
+.grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(110px,1fr));gap:7px;margin-bottom:2rem;width:100%}
 .card{background:#fff;border:1px solid #E8E7E2;border-radius:12px;padding:0.75rem;cursor:pointer;transition:border-color 0.15s}
+.card{min-width:0;overflow:hidden}
 .card:hover{border-color:#B4B2A9}
 .card-emoji{font-size:18px;margin-bottom:5px}
 .card-name{font-size:12px;font-weight:600;color:#1C1C1A;margin-bottom:2px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
@@ -101,8 +102,9 @@ body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;backgrou
 .detail-panel.active{display:block}
 
 @media(max-width:600px){
-  .grid{grid-template-columns:repeat(3,1fr)}
+  .grid{grid-template-columns:repeat(3,minmax(0,1fr))}
   .form-row{grid-template-columns:1fr}
+  .app{padding:1rem 0.75rem}
 }
 input[type="date"] {
   -webkit-appearance: none;
